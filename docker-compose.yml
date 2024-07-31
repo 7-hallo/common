@@ -1,0 +1,17 @@
+services:
+  common:
+    image: sevenhallo-common:latest
+    container_name: common
+    command: start-dev
+    ports:
+      - "8011:8011"
+    networks:
+      - sevenhallo
+
+volumes:
+  product-service:
+
+networks:
+  sevenhallo:
+    driver: bridge
+    external: true
