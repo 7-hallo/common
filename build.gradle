@@ -1,11 +1,12 @@
 plugins {
     id 'java'
+    id 'maven-publish'
     id 'org.springframework.boot' version '3.3.2'
     id 'io.spring.dependency-management' version '1.1.6'
 }
 
 group = 'com.sevenhallo'
-version = '0.0.1-SNAPSHOT'
+version = "${version}"
 
 java {
     toolchain {
@@ -21,6 +22,10 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven {
+        url "http://localhost:8081/repository/maven-public/"
+        allowInsecureProtocol true
+    }
 }
 
 dependencies {
@@ -36,4 +41,45 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+publishing {
+    ext {
+        VERSION = "${version}"
+
+        if ("${VERSION}".endsWith('SNAPSHOT')) {
+            DEPLOY_REPOSITORY = '/maven-snapshots/'
+        } else {
+            DEPLOY_REPOSITORY = '/maven-releases/'
+        }
+        NEXUS_REPO_URL = "http://localhost:8081/repository" + "${DEPLOY_REPOSITORY}"
+    }
+
+    publications {
+        nexus(MavenPublication) {
+            afterEvaluate {
+                from components.java
+                versionMapping {
+                    allVariants {
+                        fromResolutionOf("runtimeClasspath")
+                    }
+                }
+                groupId 'com.sevenhallo'
+                artifactId 'common'
+                version = "${VERSION}"
+            }
+        }
+    }
+    repositories {
+        maven {
+            afterEvaluate {
+                url = "${NEXUS_REPO_URL}"
+            }
+            credentials {
+                username = System.getenv('NEXUS_USERNAME') ?: "${NEXUS_USERNAME}"
+                password = System.getenv('NEXUS_PASSWORD') ?: "${NEXUS_PASSWORD}"
+            }
+            allowInsecureProtocol true
+        }
+    }
 }
