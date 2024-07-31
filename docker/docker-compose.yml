@@ -9,7 +9,7 @@ services:
       - sevenhallo
 
 volumes:
-  product-service:
+  common:
 
 networks:
   sevenhallo:
